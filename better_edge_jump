@@ -1,1 +1,44 @@
 
+local script_enable = gui.new_checkbox("Enable", "edge_enable", false)
+local edge_key = gui.new_keybox("Edge key", "edge_key")
+local visualise_pos_clr = gui.new_colorpicker("\ncircle_col", "circle_col", color.new(255,255,255,255))
+local visualise_pos = gui.new_checkbox("Visualise pos", "visualise", false)
+
+function extrapolate_ticks(vec,player, ticks)
+    local velocity = player:get_prop_vec3("m_vecVelocity")
+    local pos = vec + velocity * (ticks / info.game.tickrate)
+    return pos
+end
+
+function on_setup_command(cmd)
+    local edge_enable = script_enable:get_value()
+    local me_idx = engine_client.get_local_player()
+    local me = entity_list.get_entity(me_idx)
+    local local_origin = me:get_prop_vec3("m_vecOrigin")
+    local extrapolated_pos = extrapolate_ticks(local_origin, me, 1)
+
+    local end_ = extrapolated_pos
+    end_.z = end_.z - 32
+    local ent, fraction = engine_client.run_trace( me_idx, local_origin, end_ )
+    
+    if edge_enable and input_handler.is_key_pressed(edge_key:get_value()) then -- edge uwu
+        if fraction == 1.00 then 
+            cmd:set_button(buttons.jump)
+        end
+    end
+end
+
+function on_paint()
+    local me_idx = engine_client.get_local_player()
+    local me = entity_list.get_entity(me_idx)
+    local local_origin = me:get_prop_vec3("m_vecOrigin")
+    local clr = visualise_pos_clr:get_value()
+    local enable = visualise_pos:get_value()
+
+    local uwu = extrapolate_ticks(local_origin, me, 1)
+    local x,y = renderer.world_to_screen(uwu)
+    
+    if enable then 
+        renderer.circle(x, y, 30, clr, 1.0, true)
+    end
+end
