@@ -23,4 +23,6 @@ local timer = utils.new_timer(
 
 timer:start()
 
-
+function on_shutdown()
+    steam_api.ISteamFriends.ClearRichPresence()
+end
